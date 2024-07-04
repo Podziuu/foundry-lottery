@@ -115,8 +115,8 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
     }
 
     function performUpkeep(bytes calldata /* performData */ ) external override {
-        (bool upkeepNeeded, ) = checkUpkeep("");
-        if(!upkeepNeeded) {
+        (bool upkeepNeeded,) = checkUpkeep("");
+        if (!upkeepNeeded) {
             revert Raffle__UpkeepNotNeeded(address(this).balance, s_players.length, uint256(s_raffleState));
         }
 
@@ -137,7 +137,7 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
         uint256 requestId = s_vrfCoordinator.requestRandomWords(request);
     }
 
-    function fulfillRandomWords(uint256 /*requestId */, uint256[] calldata randomWords) internal override {
+    function fulfillRandomWords(uint256, /*requestId */ uint256[] calldata randomWords) internal override {
         uint256 indexOfWinner = randomWords[0] % s_players.length;
         address payable recentWinner = s_players[indexOfWinner];
         s_recentWinner = recentWinner;
