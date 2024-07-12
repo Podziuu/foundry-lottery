@@ -50,6 +50,7 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
      */
     event RaffleEntered(address indexed player);
     event WinnerPicked(address indexed winner);
+    event RequestedRaffleWinner(uint256 indexed requestId);
 
     /**
      * Functions
@@ -135,6 +136,7 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
         });
 
         uint256 requestId = s_vrfCoordinator.requestRandomWords(request);
+        emit RequestedRaffleWinner(requestId); // its actually redundant bcs coordinator emits the same event in which requestId is second parameter, but for learning purposes it's here
     }
 
     function fulfillRandomWords(uint256, /*requestId */ uint256[] calldata randomWords) internal override {

@@ -14,6 +14,8 @@ abstract contract CodeConstants {
     uint96 public MOCK_GAS_PRICE_LINK = 1e9;
     int256 public MOCK_WEI_PER_UNIT_LINK = 4e15;
 
+    address public FOUNDRY_DEFAULT_SENDER = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
+
     uint256 public constant ETH_SEPOLIA_CHAIN_ID = 11155111;
     uint256 public constant LOCAL_CHAIN_ID = 31337;
 }
@@ -29,6 +31,7 @@ contract HelperConfig is Script, CodeConstants {
         uint32 callbackGasLimit;
         uint256 subscriptionId;
         address link;
+        address account;
     }
 
     NetworkConfig public localNetworkConfig;
@@ -36,6 +39,7 @@ contract HelperConfig is Script, CodeConstants {
 
     constructor() {
         networkConfigs[ETH_SEPOLIA_CHAIN_ID] = getSepoliaEthConfig();
+        // networkConfigs[LOCAL_CHAIN_ID] = getOrCreateAnvilEthConfig();
     }
 
     function getConfigByChainId(uint256 chainId) public returns (NetworkConfig memory) {
@@ -60,7 +64,8 @@ contract HelperConfig is Script, CodeConstants {
             gasLane: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae,
             callbackGasLimit: 500000,
             subscriptionId: 10101891406700478475078524892930365180333853603658363723608627425280743225710,
-            link: 0x779877A7B0D9E8603169DdbD7836e478b4624789
+            link: 0x779877A7B0D9E8603169DdbD7836e478b4624789,
+            account: 0x24e17410F893E8CB385d12Bd6De4e6d1E2C36B8F
         });
     }
 
@@ -71,10 +76,11 @@ contract HelperConfig is Script, CodeConstants {
         }
 
         // Deploy mocks
-        vm.startBroadcast();
+        vm.startBroadcast(FOUNDRY_DEFAULT_SENDER);
         VRFCoordinatorV2_5Mock vrfCoordinatorMock =
             new VRFCoordinatorV2_5Mock(MOCK_BASE_FEE, MOCK_GAS_PRICE_LINK, MOCK_WEI_PER_UNIT_LINK);
         LinkToken linkToken = new LinkToken();
+        uint256 subscriptionId = vrfCoordinatorMock.createSubscription();
         vm.stopBroadcast();
 
         localNetworkConfig = NetworkConfig({
@@ -83,9 +89,11 @@ contract HelperConfig is Script, CodeConstants {
             vrfCoordinator: address(vrfCoordinatorMock),
             gasLane: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae, // doesnt matter
             callbackGasLimit: 500000,
-            subscriptionId: 0,
-            link: address(linkToken)
+            subscriptionId: subscriptionId,
+            link: address(linkToken),
+            account: FOUNDRY_DEFAULT_SENDER
         });
+        vm.deal(localNetworkConfig.account, 100 ether);
         return localNetworkConfig;
     }
 }
